@@ -6,7 +6,7 @@ using CryptoServices.Orders.Infrastructure.Shared.Services;
 using CryptoServices.Data;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using CryptoServices.Orders.Infrastructure.MessageBus.Consumers;
 
 namespace CryproServices.Orders.API.Boot
 {
@@ -14,7 +14,7 @@ namespace CryproServices.Orders.API.Boot
     {
         public static IServiceCollection RegisterRabbitMq(this IServiceCollection services, ConfigurationManager configuration)
         {
-            /*services.AddMassTransit(configurator =>
+            services.AddMassTransit(configurator =>
             {
                 configurator.UsingRabbitMq((context, cfg) =>
                 {
@@ -24,8 +24,17 @@ namespace CryproServices.Orders.API.Boot
                         h.Username(mqSection["UserName"]);
                         h.Password(mqSection["Password"]);
                     });
+
+                    cfg.ReceiveEndpoint(e =>
+                    {
+                        e.ConfigureConsumer<ProceedOrderConsumer>(context);
+                    });
+
+                    cfg.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
                 });
-            });*/
+
+                configurator.AddConsumer<ProceedOrderConsumer>();
+            });
 
             return services;
         }
@@ -33,19 +42,19 @@ namespace CryproServices.Orders.API.Boot
         public static IServiceCollection RegisterDB(this IServiceCollection services, ConfigurationManager configuration)
         {
             services.AddDbContext<DBContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("PostgreSQL"),
-                    x => x.MigrationsHistoryTable("__efmigrationshistory", "public")));
+                {
+                    options.UseNpgsql(configuration.GetConnectionString("PostgreSQL"),
+                        x => x.MigrationsHistoryTable("__efmigrationshistory", "public"));
+                });
 
             return services;
         }
 
         public static IServiceCollection RegisterDBServices(this IServiceCollection services)
         {
-            services.AddTransient<IUsersService, UsersService>();
+            services.AddTransient<IOrderService, OrderService>();
 
-            services.AddTransient<IUsersRepository, UsersRepository>();
-
-            services.AddTransient<IHashService, HashService>();
+            services.AddTransient<IOrderRepository, OrderRepository>();
 
             return services;
         }

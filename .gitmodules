@@ -1,0 +1,6 @@
+[submodule "CryptoServices.Data"]
+	path = CryptoServices.Data
+	url = https://github.com/Osttik/CryptoServices.Data.git
+[submodule "CryptoServices.Shared"]
+	path = CryptoServices.Shared
+	url = https://github.com/Osttik/CryptoServices.Shared.git
